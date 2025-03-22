@@ -40,8 +40,8 @@ expression [all] [of the] [saved] (schems|schematics):
 expression (scale|size) of schem[atic] [(named|with id)] %string%:
     get:
         set {_file} to new File({@schematics_folder_path} + expression-1 + ".schem")
-        set {_clipboard} to ClipboardFormats.findByFile({_file}).load({_file})
-        set {_dim} to {_clipboard}.getDimensions()
+        set {_dim} to ClipboardFormats.findByFile({_file}).load({_file}).getDimensions()
+        #set {_dim} to {_clipboard}.getDimensions()
         return vector({_dim}.getX(), {_dim}.getY(), {_dim}.getZ())
 
 # Get the origin offset of a schematic as a vector
@@ -75,5 +75,6 @@ effect create schem[atic] [(named|with id)] %string% (between|within) %location%
         set {_region} to new CuboidRegion({_world}, {_pos1}, {_pos2})
         set {_clipboard} to Clipboard.create({_region})
         {_clipboard}.setOrigin({_origin})
+        set {_format} to ClipboardFormats.findByAlias("fast")
 
-        {_clipboard}.save({_file}, (1st element out of ...ClipboardFormats.getAll()))
+        {_clipboard}.save({_file}, {_format})
