@@ -53,7 +53,7 @@ expression origin [offset] of schem[atic] [(named|with id)] %string%:
         return vector({_org}.getX(), {_org}.getY(), {_org}.getZ())
 
 # Paste a schematic at a location
-effect paste schem[atic] [(named|with id)] %string% at %location%
+effect paste schem[atic] [(named|with id)] %string% at %location%:
     trigger:
         set {_file} to new File({@schematics_folder_path} + expression-1 + ".schem")
         set {_loc} to BlockVector3.at(expression-2.getBlockX(), expression-2.getBlockY(), expression-2.getBlockZ())
