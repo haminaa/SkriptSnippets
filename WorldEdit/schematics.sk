@@ -1,0 +1,79 @@
+# Worldedit schematics utilities
+# List, create, paste, get scale and delete schematics in skript
+# Requires WorldEdit and skript-reflect
+
+options:
+    # Your schematics folder. If you use WorldEdit instead of FAWE change it accordingly.
+    schematics_folder_path: "plugins/FastAsyncWorldEdit/schematics/"
+
+import:
+    com.sk89q.worldedit.bukkit.BukkitWorld
+    com.sk89q.worldedit.extent.clipboard.Clipboard
+    com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats
+    com.sk89q.worldedit.math.BlockVector3
+    com.sk89q.worldedit.regions.CuboidRegion
+    java.io.File
+    java.nio.file.Files
+    java.nio.file.Paths
+
+# Check if a schematic exists
+condition:
+    patterns:
+        schem[atic] [(named|with id)] %string% exists
+        schem[atic] [(named|with id)] %string% (does not exist|doesn't exist)
+    check:
+        set {_file} to new File({@schematics_folder_path} + expression-1 + ".schem")
+        if {_file}.exists():
+            continue if pattern is 1
+        else:
+            continue if pattern is 2
+
+# Get or delete all of the saved schematics
+expression [all] [of the] [saved] (schems|schematics):
+    get:
+        set {_dir} to new File({@schematics_folder_path})
+        return ...{_dir}.list()
+    delete:
+        (new File({@schematics_folder_path})).delete()
+
+# Get the scale of a schematic as a vector
+expression (scale|size) of schem[atic] [(named|with id)] %string%:
+    get:
+        set {_file} to new File({@schematics_folder_path} + expression-1 + ".schem")
+        set {_clipboard} to ClipboardFormats.findByFile({_file}).load({_file})
+        set {_dim} to {_clipboard}.getDimensions()
+        return vector({_dim}.getX(), {_dim}.getY(), {_dim}.getZ())
+
+# Get the origin offset of a schematic as a vector
+expression origin [offset] of schem[atic] [(named|with id)] %string%:
+    get:
+        set {_file} to new File({@schematics_folder_path} + expression-1 + ".schem")
+        set {_clipboard} to ClipboardFormats.findByFile({_file}).load({_file})
+        set {_org} to {_clipboard}.getOrigin()
+        return vector({_org}.getX(), {_org}.getY(), {_org}.getZ())
+
+# Paste a schematic at a location
+effect paste schem[atic] [(named|with id)] %string% at %location%
+    trigger:
+        set {_file} to new File({@schematics_folder_path} + expression-1 + ".schem")
+        set {_loc} to BlockVector3.at(expression-2.getBlockX(), expression-2.getBlockY(), expression-2.getBlockZ())
+        set {_world} to new BukkitWorld(expression-2.getWorld())
+
+        ClipboardFormats.findByFile({_file}).load({_file}).paste({_world}, {_loc}, true, false, false, null)
+
+# Create a schematic between 2 locations
+effect create schem[atic] [(named|with id)] %string% (between|within) %location% (and|to) %location% (at|with) origin %location%:
+    trigger:
+        set {_file} to new File({@schematics_folder_path} + expression-1 + ".schem")
+        Files.deleteIfExists(Paths.get({_file}.getPath()))
+
+        set {_pos1} to BlockVector3.at(expression-2.getBlockX(), expression-2.getBlockY(), expression-2.getBlockZ())
+        set {_pos2} to BlockVector3.at(expression-3.getBlockX(), expression-3.getBlockY(), expression-3.getBlockZ())
+        set {_world} to new BukkitWorld(expression-2.getWorld())
+        set {_origin} to BlockVector3.at(expression-4.getBlockX(), expression-4.getBlockY(), expression-4.getBlockZ())
+
+        set {_region} to new CuboidRegion({_world}, {_pos1}, {_pos2})
+        set {_clipboard} to Clipboard.create({_region})
+        {_clipboard}.setOrigin({_origin})
+
+        {_clipboard}.save({_file}, (1st element out of ...ClipboardFormats.getAll()))
